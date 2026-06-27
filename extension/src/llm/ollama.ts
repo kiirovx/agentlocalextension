@@ -7,17 +7,24 @@ export interface ChatMessage {
 }
 
 export async function askOllama(messages: ChatMessage[]) {
+  console.log("========== OLLAMA REQUEST ==========");
+  console.log(messages);
+
   const response = await axios.post(
     OLLAMA_API,
     {
       model: MODEL_NAME,
+      think: false,
       stream: false,
       messages,
     },
     {
-      timeout: 60000,
+      timeout: 300000,
     },
   );
+
+  console.log("========== OLLAMA RESPONSE ==========");
+  console.log(response.data);
 
   return response.data.message.content;
 }
@@ -51,7 +58,7 @@ export async function askOllamaStream(
   while (true) {
     const { value, done } = await reader.read();
 
-    if (done) break;
+    if (done) { break; }
 
     buffer += decoder.decode(value, { stream: true });
 
@@ -60,7 +67,7 @@ export async function askOllamaStream(
     buffer = lines.pop() ?? "";
 
     for (const line of lines) {
-      if (!line.trim()) continue;
+      if (!line.trim()) { continue; }
 
       const json = JSON.parse(line);
 

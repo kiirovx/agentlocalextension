@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
 
-export async function writeFile(
-  path: string,
-  content: string
-): Promise<void> {
+export async function mkdir(path: string): Promise<string> {
   const workspace = vscode.workspace.workspaceFolders?.[0];
 
   if (!workspace) {
@@ -11,9 +8,6 @@ export async function writeFile(
   }
 
   const uri = vscode.Uri.joinPath(workspace.uri, path);
-
-  await vscode.workspace.fs.writeFile(
-    uri,
-    Buffer.from(content, "utf8")
-  );
+  await vscode.workspace.fs.createDirectory(uri);
+  return `Directory created: ${path}`;
 }

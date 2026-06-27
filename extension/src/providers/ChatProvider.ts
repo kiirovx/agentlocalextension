@@ -1,15 +1,11 @@
 import * as vscode from "vscode";
 
-import { askOllama } from "../llm/ollama";
-import { SYSTEM_PROMPT } from "../llm/prompt";
+import { runAgent } from "../agent/loop";
 import { getReactHtml } from "../ui/reactLoader";
-interface LLMMessage {
-  role: "system" | "user" | "assistant";
-  content: string;
-}
+
 export class ChatProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "qwenforge.chat";
-  private history: LLMMessage[] = [];
+
   constructor(private readonly context: vscode.ExtensionContext) {}
 
   resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -31,46 +27,35 @@ export class ChatProvider implements vscode.WebviewViewProvider {
     );
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
-      console.log("📥 EXTENSION RECEIVED:", message);
       if (message.type !== "chat") {
         return;
       }
 
       try {
-        console.log("🤖 Calling Ollama...");
-        this.history.push({
-          role: "user",
-          content: message.message,
-        });
+        console.log("🚀 AGENT START");
+        webviewView.webview.postMessage({ type: "chat-start" });
 
-        const reply = await askOllama([
-          {
-            role: "system",
-            content: SYSTEM_PROMPT,
-          },
-          ...this.history,
-        ]);
+        const reply = await runAgent(message.message, (event) => {
+          webviewView.webview.postMessage({
+            type: "agent-event",
+            event,
+          });
+        });
 
         webviewView.webview.postMessage({
           type: "chat-response",
           message: reply,
         });
-
-        this.history.push({
-          role: "assistant",
-          content: reply,
-        });
-
-        if (this.history.length > 20) {
-          this.history = this.history.slice(-20);
-        }
+        webviewView.webview.postMessage({ type: "chat-end" });
+        console.log("✅ AGENT DONE");
       } catch (err) {
         console.error(err);
 
         webviewView.webview.postMessage({
           type: "chat-response",
-          message: "❌ Cannot connect to Ollama.",
+          message: "❌ Agent Error: " + String(err),
         });
+        webviewView.webview.postMessage({ type: "chat-end" });
       }
     });
   }

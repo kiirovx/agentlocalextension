@@ -5,23 +5,25 @@ interface Props {
   loading: boolean;
 }
 
-export default function Input({
-  onSend,
-  loading,
-}: Props) {
+export default function Input({ onSend, loading }: Props) {
   const [text, setText] = useState("");
 
   function send() {
-    if (!text.trim() || loading) return;
+    console.log("🔥 BUTTON CLICK");
+
+    if (!text.trim()) {
+      console.log("EMPTY");
+      return;
+    }
+
+    console.log("TEXT =", text);
 
     onSend(text);
 
     setText("");
   }
 
-  function handleKeyDown(
-    e: React.KeyboardEvent<HTMLTextAreaElement>
-  ) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
 
@@ -34,21 +36,12 @@ export default function Input({
       <textarea
         value={text}
         disabled={loading}
-        placeholder={
-          loading
-            ? "Qwen is thinking..."
-            : "Ask Qwen..."
-        }
+        placeholder={loading ? "Qwen is thinking..." : "Ask Qwen..."}
         onKeyDown={handleKeyDown}
-        onChange={(e) =>
-          setText(e.target.value)
-        }
+        onChange={(e) => setText(e.target.value)}
       />
 
-      <button
-        disabled={loading}
-        onClick={send}
-      >
+      <button disabled={loading} onClick={send}>
         {loading ? "..." : "➤"}
       </button>
     </div>

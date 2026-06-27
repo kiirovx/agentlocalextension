@@ -1,0 +1,15 @@
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2d2d30;
+  --bg-tertiary: #252526;
+  --text-primary: #d4d4d4;
+  --text-secondary: #888;
+  --accent: #007acc;
+  --accent-light: #3794ff;
+  --success: #4ec9b0;
+  --error: #f44747;
+  --border: #3d3d3d;
+  --tool-bg: #1e2d1e;
+  --tool-border: #2d4d2d;
+  --code-font: "Cascadia Code","Fira Code",Consolas,monospace;
+}

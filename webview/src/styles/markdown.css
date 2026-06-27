@@ -1,0 +1,3 @@
+.bubble img { max-width: 100%; border-radius: 6px; }
+.bubble pre { margin: 0; }
+.bubble input[type="checkbox"] { margin-right: 6px; }

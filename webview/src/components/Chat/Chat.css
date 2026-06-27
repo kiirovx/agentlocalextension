@@ -1,0 +1,13 @@
+.chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+.message { display: flex; gap: 8px; align-items: flex-start; }
+.message.user { flex-direction: row-reverse; }
+.message.assistant,.message.tool { flex-direction: row; }
+.message.tool { opacity: 0.85; }
+.avatar { font-size: 20px; flex-shrink: 0; margin-top: 4px; }
+.bubble { padding: 10px 14px; border-radius: 14px; max-width: 85%; word-break: break-word; line-height: 1.5; font-size: 13px; }
+.user-bubble { background: #0e639c; color: white; }
+.assistant-bubble { background: #2d2d30; color: #d4d4d4; }
+.tool-bubble { background: #1e2d1e; border: 1px solid #2d4d2d; max-width: 100%; font-size: 12px; }
+.tool-message { display: flex; flex-direction: column; gap: 6px; }
+.tool-label { font-weight: 600; color: #4ec9b0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+.tool-output { background: #0d1b0d; padding: 8px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; font-family: "Cascadia Code","Fira Code",Consolas,monospace; font-size: 11px; max-height: 300px; overflow-y: auto; color: #9cdcfe; }

@@ -1,9 +1,18 @@
 export interface ChatMessage {
+    id: number;
+    role: "user" | "assistant" | "tool";
+    content: string;
+    toolName?: string;
+    toolSuccess?: boolean;
+    timestamp?: number;
+}
 
-    id:number;
-
-    role:"user"|"assistant";
-
-    content:string;
-
+export interface AgentEvent {
+    type: "thinking" | "tool-start" | "tool-end" | "response" | "error";
+    message?: string;
+    tool?: string;
+    input?: string;
+    output?: string;
+    success?: boolean;
+    text?: string;
 }

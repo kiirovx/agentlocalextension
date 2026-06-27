@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
 
-export async function writeFile(
-  path: string,
-  content: string
-): Promise<void> {
+export async function exists(path: string): Promise<string> {
   const workspace = vscode.workspace.workspaceFolders?.[0];
 
   if (!workspace) {
@@ -12,8 +9,10 @@ export async function writeFile(
 
   const uri = vscode.Uri.joinPath(workspace.uri, path);
 
-  await vscode.workspace.fs.writeFile(
-    uri,
-    Buffer.from(content, "utf8")
-  );
+  try {
+    await vscode.workspace.fs.stat(uri);
+    return `true - ${path} exists`;
+  } catch {
+    return `false - ${path} does not exist`;
+  }
 }
