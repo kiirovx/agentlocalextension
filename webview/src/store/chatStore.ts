@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import type { ChatMessage, AgentEvent } from "../types/message";
+import type { ToolStep } from "../components/ToolCard/ToolCard";
 
 interface ChatStore {
   messages: ChatMessage[];
   loading: boolean;
   thinking: string | null;
-  toolEvents: AgentEvent[];
+  toolSteps: ToolStep[];
 
   addUserMessage(content: string): void;
   startAssistantMessage(): void;
@@ -14,14 +15,13 @@ interface ChatStore {
   setLoading(loading: boolean): void;
   clearMessages(): void;
   handleAgentEvent(event: AgentEvent): void;
-  addToolMessage(content: string, toolName: string, success?: boolean): void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
   messages: [],
   loading: false,
   thinking: null,
-  toolEvents: [],
+  toolSteps: [],
 
   addUserMessage: (content) =>
     set((state) => ({
@@ -63,40 +63,41 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   setLoading: (loading) => set({ loading }),
 
-  clearMessages: () => set({ messages: [], toolEvents: [], thinking: null }),
+  clearMessages: () => set({ messages: [], toolSteps: [], thinking: null }),
 
   handleAgentEvent: (event) =>
     set((state) => {
       switch (event.type) {
         case "thinking":
           return { thinking: event.message ?? null };
+
         case "tool-start":
           return {
-            messages: [
-              ...state.messages,
+            toolSteps: [
+              ...state.toolSteps,
               {
-                id: Date.now(),
-                role: "tool",
-                content: `🔧 ${event.tool}: ${event.input || ""}`,
-                toolName: event.tool,
+                id: `tool-${Date.now()}`,
+                tool: event.tool || "unknown",
+                status: "running",
+                input: event.input,
                 timestamp: Date.now(),
               },
             ],
           };
+
         case "tool-end":
           return {
-            messages: [
-              ...state.messages,
-              {
-                id: Date.now(),
-                role: "tool",
-                content: event.output || "",
-                toolName: event.tool,
-                toolSuccess: event.success,
-                timestamp: Date.now(),
-              },
-            ],
+            toolSteps: state.toolSteps.map((step) =>
+              step.tool === event.tool && step.status === "running"
+                ? {
+                    ...step,
+                    status: event.success ? "done" : "error",
+                    output: event.output,
+                  }
+                : step
+            ),
           };
+
         case "error":
           return {
             messages: [
@@ -109,23 +110,9 @@ export const useChatStore = create<ChatStore>((set) => ({
               },
             ],
           };
+
         default:
           return {};
       }
     }),
-
-  addToolMessage: (content, toolName, success) =>
-    set((state) => ({
-      messages: [
-        ...state.messages,
-        {
-          id: Date.now(),
-          role: "tool",
-          content,
-          toolName,
-          toolSuccess: success,
-          timestamp: Date.now(),
-        },
-      ],
-    })),
 }));
