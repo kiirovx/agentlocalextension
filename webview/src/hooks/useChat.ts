@@ -2,51 +2,30 @@ import vscode from "../services/vscode";
 import { useChatStore } from "../store/chatStore";
 
 export function useChat() {
-  const {
-    messages,
-    loading,
-    thinking,
-
-    addUserMessage,
-    startAssistantMessage,
-    appendAssistantToken,
-    finishAssistantMessage,
-    setLoading,
-    handleAgentEvent,
-  } = useChatStore();
+  const store = useChatStore();
 
   function send(content: string) {
-    if (!content.trim() || loading) return;
+    if (!content.trim() || store.loading) return;
 
-    addUserMessage(content);
+    store.addUserMessage(content);
+    store.startAssistantMessage(); // 🔥 Start assistant message dulu
+    store.setLoading(true);
+
     vscode.postMessage({
       type: "chat",
       message: content,
     });
   }
 
-  function startAssistant() {
-    startAssistantMessage();
-    setLoading(true);
-  }
-
-  function receive(token: string) {
-    appendAssistantToken(token);
-  }
-
-  function finishAssistant() {
-    finishAssistantMessage();
-    setLoading(false);
-  }
-
   return {
-    messages,
-    loading,
-    thinking,
+    messages: store.messages,
+    loading: store.loading,
+    thinking: store.thinking,
+    streamingText: store.streamingText,
     send,
-    startAssistant,
-    receive,
-    finishAssistant,
-    handleAgentEvent,
+    clearMessages: store.clearMessages,
+    loadMessages: store.loadMessages,
+    handleAgentEvent: store.handleAgentEvent,
+    finishAssistantMessage: store.finishAssistantMessage,
   };
 }

@@ -1,58 +1,65 @@
 import { useEffect } from "react";
-
 import Header from "../components/Header/Header";
 import Chat from "../components/Chat/Chat";
-import Input from "../components/Composer/Input";
-
+import Composer from "../components/Composer/Input";
+import ChatHistory from "../components/Sidebar/ChatHistory";
+import { useChat } from "../hooks/useChat";
 import "./App.css";
 
-import { useChat } from "../hooks/useChat";
-
 export default function App() {
-  const { messages, loading, send, receive, startAssistant, finishAssistant, handleAgentEvent } =
-    useChat();
+  const {
+    messages,
+    loading,
+    thinking,
+    streamingText,
+    send,
+    clearMessages,
+    loadMessages,
+    handleAgentEvent,
+    finishAssistantMessage,
+  } = useChat();
 
   useEffect(() => {
-    const listener = (event: MessageEvent) => {
-      console.log("📨 FROM EXTENSION", event.data);
-      switch (event.data.type) {
-        case "chat-start":
-          startAssistant();
-          break;
+    const handler = (event: MessageEvent) => {
+      const msg = event.data;
 
-        case "chat-stream":
-          receive(event.data.token);
-          break;
+      if (msg.type === "agent-event") {
+        handleAgentEvent(msg.event);
+        
+        // Finish assistant message saat chat-end
+        if (msg.event.type === "response" || msg.event.type === "error") {
+          finishAssistantMessage();
+        }
+      }
 
-        case "chat-end":
-          finishAssistant();
-          break;
+      if (msg.type === "chat-end") {
+        finishAssistantMessage();
+      }
 
-        case "chat-response":
-          receive(event.data.message);
-          finishAssistant();
-          break;
+      if (msg.type === "history:loaded") {
+        loadMessages(msg.chat.messages);
+      }
 
-        case "agent-event":
-          handleAgentEvent(event.data.event);
-          break;
+      if (msg.type === "history:cleared") {
+        clearMessages();
       }
     };
 
-    window.addEventListener("message", listener);
-
-    return () => {
-      window.removeEventListener("message", listener);
-    };
-  }, [receive, startAssistant, finishAssistant, handleAgentEvent]);
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [clearMessages, loadMessages, handleAgentEvent, finishAssistantMessage]);
 
   return (
     <div className="app">
       <Header />
-
-      <Chat messages={messages} loading={loading} />
-
-      <Input onSend={send} loading={loading} />
+      <ChatHistory onClearChat={clearMessages} />
+      <Chat 
+        messages={messages} 
+        loading={loading}
+        thinking={thinking}
+        streamingText={streamingText}
+      />
+      <Composer onSend={send} />
     </div>
   );
 }

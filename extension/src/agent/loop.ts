@@ -1,4 +1,4 @@
-import { askOllama, ChatMessage } from "../llm/ollama";
+import { askOllamaStream, ChatMessage } from "../llm/ollama";
 import { buildSystemPrompt } from "./planner";
 import { parseToolCall } from "./parser";
 import { executeTool } from "./executor";
@@ -7,6 +7,7 @@ export type AgentEvent =
   | { type: "thinking"; message: string }
   | { type: "tool-start"; tool: string; input: string }
   | { type: "tool-end"; tool: string; output: string; success: boolean }
+  | { type: "stream"; token: string }
   | { type: "response"; text: string }
   | { type: "error"; message: string };
 
@@ -30,17 +31,26 @@ export async function runAgent(
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     onEvent?.({
       type: "thinking",
-      message: i === 0 ? "Analyzing request..." : `Step ${i + 1}...`,
+      message: i === 0 ? "Menganalisis permintaan..." : `Langkah ${i + 1}...`,
     });
 
-    const reply = await askOllama(conversation);
+    let fullReply = "";
+    
+  await askOllamaStream(conversation, (token: string) => {
+  fullReply += token;
+  onEvent?.({ type: "stream", token });
+});
 
-    const toolCall = parseToolCall(reply);
+    console.log("========== LLM RAW RESPONSE ==========");
+    console.log(fullReply);
+    console.log("=======================================");
 
-    // Kalau model sudah menjawab normal, selesai.
+    const toolCall = parseToolCall(fullReply);
+
     if (!toolCall) {
-      onEvent?.({ type: "response", text: reply });
-      return reply;
+      console.log("ℹ️ No tool call detected, returning text response");
+      onEvent?.({ type: "response", text: fullReply });
+      return fullReply;
     }
 
     console.log("🛠 Tool:", toolCall.tool);
@@ -68,7 +78,7 @@ export async function runAgent(
 
     conversation.push({
       role: "assistant",
-      content: reply,
+      content: fullReply,
     });
 
     conversation.push({

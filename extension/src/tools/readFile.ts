@@ -1,15 +1,32 @@
 import * as vscode from "vscode";
+import * as path from "path";
 
-export async function readFile(path: string): Promise<string> {
-  const workspace = vscode.workspace.workspaceFolders?.[0];
+export async function readFile(filePath: string): Promise<string> {
+  console.log(`📖 readFile called with: "${filePath}"`);
 
-  if (!workspace) {
-    throw new Error("Workspace not found");
+  if (!filePath || filePath.trim() === "") {
+    throw new Error("Parameter path tidak boleh kosong");
   }
 
-  const uri = vscode.Uri.joinPath(workspace.uri, path);
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders || workspaceFolders.length === 0) {
+    throw new Error("Tidak ada workspace yang terbuka. Buka folder dulu!");
+  }
 
-  const data = await vscode.workspace.fs.readFile(uri);
+  const rootPath = workspaceFolders[0].uri.fsPath;
+  const fullPath = path.resolve(rootPath, filePath);
 
-  return Buffer.from(data).toString("utf8");
+  console.log(`📖 Full path: ${fullPath}`);
+
+  try {
+    const uri = vscode.Uri.file(fullPath);
+    const document = await vscode.workspace.openTextDocument(uri);
+    const content = document.getText();
+    const lineCount = document.lineCount;
+
+    return `📄 File: ${filePath}\n📏 ${lineCount} baris\n\n${content}`;
+  } catch (error: any) {
+    console.error(`❌ readFile error:`, error);
+    throw new Error(`Gagal membaca file "${filePath}": ${error.message}`);
+  }
 }

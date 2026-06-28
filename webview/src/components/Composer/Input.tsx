@@ -1,49 +1,37 @@
 import { useState } from "react";
+import "./Composer.css";
 
 interface Props {
-  onSend(text: string): void;
-  loading: boolean;
+  onSend: (content: string) => void;
 }
 
-export default function Input({ onSend, loading }: Props) {
-  const [text, setText] = useState("");
+export default function Composer({ onSend }: Props) {
+  const [input, setInput] = useState("");
 
-  function send() {
-    console.log("🔥 BUTTON CLICK");
-
-    if (!text.trim()) {
-      console.log("EMPTY");
-      return;
+  const handleSend = () => {
+    if (input.trim()) {
+      onSend(input);
+      setInput("");
     }
+  };
 
-    console.log("TEXT =", text);
-
-    onSend(text);
-
-    setText("");
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-
-      send();
+      handleSend();
     }
-  }
+  };
 
   return (
-    <div className="input">
+    <div className="composer">
       <textarea
-        value={text}
-        disabled={loading}
-        placeholder={loading ? "Qwen is thinking..." : "Ask Qwen..."}
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        onChange={(e) => setText(e.target.value)}
+        placeholder="Ketik pesan... (Enter untuk kirim)"
+        rows={2}
       />
-
-      <button disabled={loading} onClick={send}>
-        {loading ? "..." : "➤"}
-      </button>
+      <button onClick={handleSend}>➤</button>
     </div>
   );
 }
